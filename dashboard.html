@@ -6,217 +6,105 @@
 <title>NERV Dashboard — unidade 0</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+JP:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap');
-
-  :root {
-    --black: #080810;
-    --dark: #0d0d1a;
-    --panel: #111120;
-    --panel2: #141428;
-    --orange: #ff6600;
-    --orange2: #ff4500;
-    --red: #cc0000;
-    --teal: #00b4b4;
-    --teal-dim: #006666;
-    --white: #e8e8e0;
-    --muted: rgba(232,232,224,0.45);
-    --border: rgba(0,180,180,0.18);
-    --border-o: rgba(255,102,0,0.2);
-    --sidebar-w: 260px;
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { width:100%; height:100%; background:var(--black); color:var(--white); font-family:'Share Tech Mono',monospace; overflow:hidden; }
-
-  /* ── SCANLINES ── */
-  .scanlines { position:fixed; inset:0; z-index:999; pointer-events:none; background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,0.13) 3px,rgba(0,0,0,0.13) 4px); opacity:0.3; }
-
-  /* ── BG ── */
-  .bg { position:fixed; inset:0; z-index:0;
-    background:
-      repeating-linear-gradient(60deg,transparent,transparent 34px,rgba(0,180,180,0.025) 34px,rgba(0,180,180,0.025) 35px),
-      repeating-linear-gradient(-60deg,transparent,transparent 34px,rgba(0,180,180,0.025) 34px,rgba(0,180,180,0.025) 35px);
-  }
-
-  /* ── TOPBAR ── */
-  .topbar {
-    position:fixed; top:0; left:0; right:0; height:48px; z-index:200;
-    background:rgba(8,8,16,0.97);
-    border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 20px 0 0;
-  }
-  .topbar::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--orange),var(--red),transparent); }
-
-  .topbar-logo {
-    width:var(--sidebar-w);
-    display:flex; align-items:center; gap:12px;
-    padding: 0 20px;
-    border-right:1px solid var(--border);
-    height:100%;
-  }
-  .topbar-logo-text { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:900; background:linear-gradient(135deg,var(--orange),var(--red)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-  .topbar-logo-sub { font-size:8px; color:var(--teal-dim); letter-spacing:0.2em; text-transform:uppercase; }
-
-  .topbar-center { display:flex; align-items:center; gap:24px; flex:1; padding-left:24px; }
-  .topbar-stat { display:flex; flex-direction:column; }
-  .topbar-stat-label { font-size:8px; color:var(--teal-dim); letter-spacing:0.15em; text-transform:uppercase; }
-  .topbar-stat-val { font-size:12px; color:var(--teal); font-family:'Orbitron',sans-serif; }
-
-  .topbar-right { display:flex; align-items:center; gap:16px; }
-  .topbar-clock { font-family:'Orbitron',sans-serif; font-size:11px; color:rgba(255,102,0,0.6); letter-spacing:0.2em; }
-  .topbar-user { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:8px; }
-  .topbar-user-dot { width:8px; height:8px; border-radius:50%; background:var(--teal); box-shadow:0 0 6px var(--teal); }
-  .topbar-logout { font-size:10px; letter-spacing:0.1em; color:rgba(204,0,0,0.6); text-decoration:none; border:1px solid rgba(204,0,0,0.25); padding:4px 10px; transition:all 0.2s; cursor:pointer; background:none; }
-  .topbar-logout:hover { color:var(--red); border-color:var(--red); }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    position:fixed; top:48px; left:0; bottom:0; width:var(--sidebar-w); z-index:100;
-    background:rgba(10,10,18,0.98);
-    border-right:1px solid var(--border);
-    display:flex; flex-direction:column;
-    overflow:hidden;
-  }
-  .sidebar-scroll { flex:1; overflow-y:auto; padding-bottom:16px; }
-  .sidebar-scroll::-webkit-scrollbar { width:3px; }
-  .sidebar-scroll::-webkit-scrollbar-track { background:transparent; }
-  .sidebar-scroll::-webkit-scrollbar-thumb { background:var(--teal-dim); border-radius:2px; }
-
-  .sidebar-section { padding:12px 0 4px; }
-  .sidebar-section-label {
-    font-size:9px; letter-spacing:0.2em; text-transform:uppercase;
-    color:var(--teal-dim); padding:0 16px 8px;
-    display:flex; align-items:center; gap:8px;
-  }
-  .sidebar-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
-
-  .sidebar-course {
-    margin: 0 8px 2px;
-    border-radius:2px;
-  }
-  .sidebar-course-header {
-    display:flex; align-items:center; gap:10px;
-    padding:9px 10px; cursor:pointer;
-    border-radius:2px; transition:background 0.15s;
-    font-size:12px; color:rgba(232,232,224,0.75);
-    position:relative;
-  }
-  .sidebar-course-header:hover { background:rgba(0,180,180,0.06); }
-  .sidebar-course-header.active { background:rgba(255,102,0,0.08); color:var(--orange); }
-  .sidebar-course-icon { width:22px; height:22px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; background:rgba(255,102,0,0.15); color:var(--orange); font-family:'Orbitron',sans-serif; font-weight:700; }
-  .sidebar-course-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; }
-  .sidebar-course-chevron { font-size:10px; color:var(--teal-dim); transition:transform 0.25s; }
-  .sidebar-course-header.open .sidebar-course-chevron { transform:rotate(90deg); }
-
-  .sidebar-units { max-height:0; overflow:hidden; transition:max-height 0.35s ease; }
-  .sidebar-units.open { max-height:600px; }
-  .sidebar-unit {
-    padding:7px 10px 7px 42px;
-    font-size:11px; color:var(--muted); cursor:pointer;
-    transition:color 0.15s, background 0.15s;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    display:flex; align-items:center; gap:8px;
-  }
-  .sidebar-unit:hover { color:var(--white); background:rgba(0,180,180,0.04); }
-  .sidebar-unit.active { color:var(--teal); }
-  .sidebar-unit-pct { font-size:9px; color:var(--teal-dim); margin-left:auto; flex-shrink:0; }
-  .sidebar-unit-pct.done { color:var(--orange); }
-
-  .sidebar-footer { padding:12px 16px; border-top:1px solid var(--border); font-size:10px; color:var(--muted); display:flex; flex-direction:column; gap:4px; }
-  .sidebar-footer a { color:var(--muted); text-decoration:none; }
-  .sidebar-footer a:hover { color:var(--teal); }
-
-  /* ── MAIN ── */
-  .main { position:fixed; top:48px; left:var(--sidebar-w); right:0; bottom:0; overflow-y:auto; z-index:50; padding:28px 32px; }
-  .main::-webkit-scrollbar { width:4px; }
-  .main::-webkit-scrollbar-track { background:transparent; }
-  .main::-webkit-scrollbar-thumb { background:var(--teal-dim); border-radius:2px; }
-
-  /* Page header */
-  .page-header { margin-bottom:28px; }
-  .page-breadcrumb { font-size:10px; color:var(--teal-dim); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:8px; }
-  .page-breadcrumb span { color:var(--muted); }
-  .page-title { font-family:'Orbitron',sans-serif; font-size:clamp(20px,3vw,32px); font-weight:700; color:var(--white); line-height:1.1; }
-  .page-subtitle { font-size:11px; color:var(--muted); margin-top:6px; letter-spacing:0.1em; }
-
-  /* Stats row */
-  .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
-  .stat-card {
-    border:1px solid var(--border); background:rgba(13,13,26,0.8);
-    padding:16px 18px; position:relative; overflow:hidden;
-  }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal-dim),transparent); }
-  .stat-card.orange::before { background:linear-gradient(90deg,var(--orange),transparent); }
-  .stat-card.red::before { background:linear-gradient(90deg,var(--red),transparent); }
-  .stat-label { font-size:9px; color:var(--teal-dim); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px; }
-  .stat-val { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:700; color:var(--teal); line-height:1; }
-  .stat-card.orange .stat-val { color:var(--orange); }
-  .stat-card.red .stat-val { color:var(--red); }
-  .stat-sub { font-size:10px; color:var(--muted); margin-top:6px; }
-
-  /* Units grid */
-  .section-title {
-    font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--teal-dim);
-    margin-bottom:14px; display:flex; align-items:center; gap:10px;
-  }
-  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
-
-  .units-grid { display:flex; flex-direction:column; gap:10px; margin-bottom:32px; }
-
-  .unit-card {
-    border:1px solid var(--border); background:rgba(13,13,26,0.75);
-    padding:16px 20px; display:flex; align-items:center; gap:16px;
-    cursor:pointer; transition:border-color 0.2s, background 0.2s;
-    position:relative; overflow:hidden;
-    text-decoration:none; color:inherit;
-  }
-  .unit-card:hover { border-color:rgba(0,180,180,0.4); background:rgba(0,180,180,0.04); }
-  .unit-card.done { border-color:rgba(255,102,0,0.25); }
-  .unit-card.done:hover { border-color:rgba(255,102,0,0.5); background:rgba(255,102,0,0.03); }
-
-  .unit-card-left { flex:1; min-width:0; }
-  .unit-card-title { font-size:14px; color:var(--white); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .unit-card-meta { font-size:10px; color:var(--muted); letter-spacing:0.1em; }
-
-  .unit-card-bar { width:100%; height:3px; background:rgba(0,180,180,0.1); margin-top:10px; }
-  .unit-card-bar-fill { height:100%; background:linear-gradient(90deg,var(--teal-dim),var(--teal)); transition:width 0.6s ease; }
-  .unit-card.done .unit-card-bar-fill { background:linear-gradient(90deg,var(--orange),var(--orange2)); }
-
-  .unit-card-right { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
-  .ring { width:48px; height:48px; }
-  .ring-bg { fill:none; stroke:rgba(255,255,255,0.07); stroke-width:4; }
-  .ring-fill { fill:none; stroke:var(--teal); stroke-width:4; stroke-linecap:butt; stroke-dasharray:126; transition:stroke-dashoffset 0.8s ease; transform:rotate(-90deg); transform-origin:50% 50%; }
-  .ring-fill.done { stroke:var(--orange); }
-  .ring-text { font-family:'Orbitron',sans-serif; font-size:10px; fill:var(--white); }
-
-  .unit-card-arrow { font-size:18px; color:var(--teal-dim); margin-left:4px; }
-  .unit-card.done .unit-card-arrow { color:var(--orange); opacity:0.6; }
-
-  /* Loading state */
-  .loading-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; gap:16px; }
-  .loading-bar-wrap { width:200px; height:3px; background:rgba(0,180,180,0.1); overflow:hidden; }
-  .loading-bar { height:100%; background:linear-gradient(90deg,var(--teal-dim),var(--teal)); animation:loadBar 1.4s ease-in-out infinite; }
-  @keyframes loadBar { 0%{width:0%;margin-left:0}50%{width:60%}100%{width:0%;margin-left:100%} }
-  .loading-text { font-size:10px; color:var(--teal-dim); letter-spacing:0.2em; text-transform:uppercase; }
-
-  /* Not logged */
-  .not-logged { display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; gap:16px; text-align:center; }
-  .not-logged-title { font-family:'Orbitron',sans-serif; font-size:18px; color:var(--red); }
-  .not-logged-sub { font-size:12px; color:var(--muted); line-height:1.7; }
-  .not-logged a { color:var(--orange); text-decoration:none; border-bottom:1px solid rgba(255,102,0,0.4); }
-
-  /* Pilot tag */
-  .pilot-tag { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border:1px solid rgba(0,180,180,0.2); font-size:9px; letter-spacing:0.15em; color:var(--teal-dim); text-transform:uppercase; background:rgba(0,180,180,0.04); }
-
-  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
-  .blink { animation:blink 1.1s step-end infinite; }
+  :root{--black:#080810;--orange:#ff6600;--orange2:#ff4500;--red:#cc0000;--teal:#00b4b4;--teal-dim:#006666;--white:#e8e8e0;--muted:rgba(232,232,224,0.45);--border:rgba(0,180,180,0.18);--sidebar-w:260px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--black);color:var(--white);font-family:'Share Tech Mono',monospace;overflow:hidden}
+  .scanlines{position:fixed;inset:0;z-index:999;pointer-events:none;background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,0.13) 3px,rgba(0,0,0,0.13) 4px);opacity:0.3}
+  .bg{position:fixed;inset:0;z-index:0;background:repeating-linear-gradient(60deg,transparent,transparent 34px,rgba(0,180,180,0.025) 34px,rgba(0,180,180,0.025) 35px),repeating-linear-gradient(-60deg,transparent,transparent 34px,rgba(0,180,180,0.025) 34px,rgba(0,180,180,0.025) 35px)}
+  .topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:200;background:rgba(8,8,16,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 0}
+  .topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--orange),var(--red),transparent)}
+  .topbar-logo{width:var(--sidebar-w);display:flex;align-items:center;gap:12px;padding:0 20px;border-right:1px solid var(--border);height:100%}
+  .topbar-logo-text{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;background:linear-gradient(135deg,var(--orange),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .topbar-logo-sub{font-size:8px;color:var(--teal-dim);letter-spacing:0.2em;text-transform:uppercase}
+  .topbar-center{display:flex;align-items:center;gap:24px;flex:1;padding-left:24px}
+  .topbar-stat{display:flex;flex-direction:column}
+  .topbar-stat-label{font-size:8px;color:var(--teal-dim);letter-spacing:0.15em;text-transform:uppercase}
+  .topbar-stat-val{font-size:12px;color:var(--teal);font-family:'Orbitron',sans-serif}
+  .topbar-right{display:flex;align-items:center;gap:16px}
+  .topbar-clock{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,102,0,0.6);letter-spacing:0.2em}
+  .topbar-user{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .topbar-user-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal)}
+  .topbar-logout{font-size:10px;letter-spacing:0.1em;color:rgba(204,0,0,0.6);border:1px solid rgba(204,0,0,0.25);padding:4px 10px;transition:all 0.2s;cursor:pointer;background:none}
+  .topbar-logout:hover{color:var(--red);border-color:var(--red)}
+  .sidebar{position:fixed;top:48px;left:0;bottom:0;width:var(--sidebar-w);z-index:100;background:rgba(10,10,18,0.98);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .sidebar-scroll{flex:1;overflow-y:auto;padding-bottom:16px}
+  .sidebar-scroll::-webkit-scrollbar{width:3px}
+  .sidebar-scroll::-webkit-scrollbar-thumb{background:var(--teal-dim);border-radius:2px}
+  .sidebar-section{padding:12px 0 4px}
+  .sidebar-section-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--teal-dim);padding:0 16px 8px;display:flex;align-items:center;gap:8px}
+  .sidebar-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  .sidebar-course{margin:0 8px 2px}
+  .sidebar-course-header{display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;border-radius:2px;transition:background 0.15s;font-size:12px;color:rgba(232,232,224,0.75)}
+  .sidebar-course-header:hover{background:rgba(0,180,180,0.06)}
+  .sidebar-course-header.active{background:rgba(255,102,0,0.08);color:var(--orange)}
+  .sidebar-course-icon{width:22px;height:22px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:rgba(255,102,0,0.15);color:var(--orange);font-family:'Orbitron',sans-serif;font-weight:700}
+  .sidebar-course-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+  .sidebar-course-chevron{font-size:10px;color:var(--teal-dim);transition:transform 0.25s}
+  .sidebar-course-header.open .sidebar-course-chevron{transform:rotate(90deg)}
+  .sidebar-units{max-height:0;overflow:hidden;transition:max-height 0.35s ease}
+  .sidebar-units.open{max-height:600px}
+  .sidebar-unit{padding:7px 10px 7px 42px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;transition:color 0.15s,background 0.15s}
+  .sidebar-unit:hover{color:var(--white);background:rgba(0,180,180,0.04)}
+  .sidebar-unit.active{color:var(--teal)}
+  .sidebar-unit-pct{font-size:9px;color:var(--teal-dim);margin-left:auto;flex-shrink:0}
+  .sidebar-unit-pct.done{color:var(--orange)}
+  .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .sidebar-footer a{color:var(--muted);text-decoration:none}
+  .sidebar-footer a:hover{color:var(--teal)}
+  .main{position:fixed;top:48px;left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;z-index:50;padding:28px 32px}
+  .main::-webkit-scrollbar{width:4px}
+  .main::-webkit-scrollbar-thumb{background:var(--teal-dim);border-radius:2px}
+  .page-header{margin-bottom:28px}
+  .page-breadcrumb{font-size:10px;color:var(--teal-dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
+  .page-title{font-family:'Orbitron',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:700;color:var(--white);line-height:1.1}
+  .page-subtitle{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:0.1em}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px}
+  .stat-card{border:1px solid var(--border);background:rgba(13,13,26,0.8);padding:16px 18px;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal-dim),transparent)}
+  .stat-card.orange::before{background:linear-gradient(90deg,var(--orange),transparent)}
+  .stat-label{font-size:9px;color:var(--teal-dim);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px}
+  .stat-val{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:var(--teal);line-height:1}
+  .stat-card.orange .stat-val{color:var(--orange)}
+  .stat-sub{font-size:10px;color:var(--muted);margin-top:6px}
+  .section-title{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--teal-dim);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .units-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+  .unit-card{border:1px solid var(--border);background:rgba(13,13,26,0.75);padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s,background 0.2s;text-decoration:none;color:inherit}
+  .unit-card:hover{border-color:rgba(0,180,180,0.4);background:rgba(0,180,180,0.04)}
+  .unit-card.done{border-color:rgba(255,102,0,0.25)}
+  .unit-card.done:hover{border-color:rgba(255,102,0,0.5);background:rgba(255,102,0,0.03)}
+  .unit-card-left{flex:1;min-width:0}
+  .unit-card-title{font-size:14px;color:var(--white);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .unit-card-meta{font-size:10px;color:var(--muted);letter-spacing:0.1em}
+  .unit-card-bar{width:100%;height:3px;background:rgba(0,180,180,0.1);margin-top:10px}
+  .unit-card-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal-dim),var(--teal))}
+  .unit-card.done .unit-card-bar-fill{background:linear-gradient(90deg,var(--orange),var(--orange2))}
+  .unit-card-right{flex-shrink:0}
+  .ring{width:48px;height:48px}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:4}
+  .ring-fill{fill:none;stroke:var(--teal);stroke-width:4;stroke-dasharray:126;transform:rotate(-90deg);transform-origin:50% 50%}
+  .ring-fill.done{stroke:var(--orange)}
+  .ring-text{font-family:'Orbitron',sans-serif;font-size:10px;fill:var(--white)}
+  .unit-card-arrow{font-size:18px;color:var(--teal-dim);margin-left:4px}
+  .unit-card.done .unit-card-arrow{color:var(--orange);opacity:0.6}
+  .loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px}
+  .loading-bar-wrap{width:200px;height:3px;background:rgba(0,180,180,0.1);overflow:hidden}
+  .loading-bar{height:100%;background:linear-gradient(90deg,var(--teal-dim),var(--teal));animation:loadBar 1.4s ease-in-out infinite}
+  @keyframes loadBar{0%{width:0%;margin-left:0}50%{width:60%}100%{width:0%;margin-left:100%}}
+  .loading-text{font-size:10px;color:var(--teal-dim);letter-spacing:0.2em;text-transform:uppercase}
+  .not-logged{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;text-align:center}
+  .not-logged-title{font-family:'Orbitron',sans-serif;font-size:18px;color:var(--red)}
+  .not-logged-sub{font-size:12px;color:var(--muted);line-height:1.9;max-width:420px}
+  .not-logged-sub a{color:var(--orange);text-decoration:none}
+  .pilot-tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid rgba(0,180,180,0.2);font-size:9px;letter-spacing:0.15em;color:var(--teal-dim);text-transform:uppercase;background:rgba(0,180,180,0.04)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .blink{animation:blink 1.1s step-end infinite}
 </style>
 </head>
 <body>
 <div class="bg"></div>
 <div class="scanlines"></div>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-logo">
     <div>
@@ -225,37 +113,22 @@
     </div>
   </div>
   <div class="topbar-center">
-    <div class="topbar-stat">
-      <span class="topbar-stat-label">MAGI</span>
-      <span class="topbar-stat-val blink">ONLINE</span>
-    </div>
-    <div class="topbar-stat">
-      <span class="topbar-stat-label">SYNC</span>
-      <span class="topbar-stat-val" id="top-sync">—</span>
-    </div>
-    <div class="topbar-stat">
-      <span class="topbar-stat-label">PILOTO</span>
-      <span class="topbar-stat-val" id="top-pilot">—</span>
-    </div>
+    <div class="topbar-stat"><span class="topbar-stat-label">MAGI</span><span class="topbar-stat-val blink">ONLINE</span></div>
+    <div class="topbar-stat"><span class="topbar-stat-label">SYNC</span><span class="topbar-stat-val" id="top-sync">—</span></div>
+    <div class="topbar-stat"><span class="topbar-stat-label">PILOTO</span><span class="topbar-stat-val" id="top-pilot">—</span></div>
   </div>
   <div class="topbar-right">
     <div class="topbar-clock" id="top-clock">00:00:00</div>
-    <div class="topbar-user">
-      <div class="topbar-user-dot"></div>
-      <span id="top-user">—</span>
-    </div>
+    <div class="topbar-user"><div class="topbar-user-dot"></div><span id="top-user">—</span></div>
     <button class="topbar-logout" onclick="logout()">SAIR</button>
   </div>
 </div>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sidebar-scroll" id="sidebar-scroll">
+  <div class="sidebar-scroll">
     <div class="sidebar-section">
       <div class="sidebar-section-label">Cursos</div>
-      <div id="sidebar-courses">
-        <div style="padding:20px 16px;font-size:11px;color:var(--teal-dim);">Carregando...</div>
-      </div>
+      <div id="sidebar-courses"><div style="padding:20px 16px;font-size:11px;color:var(--teal-dim)">Carregando...</div></div>
     </div>
   </div>
   <div class="sidebar-footer">
@@ -264,257 +137,248 @@
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main" id="main-content">
-  <div class="loading-wrap" id="loading-state">
-    <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
-    <div class="loading-text">INICIALIZANDO SISTEMA MAGI...</div>
-  </div>
+  <div class="loading-wrap"><div class="loading-bar-wrap"><div class="loading-bar"></div></div><div class="loading-text">INICIALIZANDO SISTEMA MAGI...</div></div>
 </div>
 
 <script>
-// ── Utilities ────────────────────────────────────────────────────
-function getCookie(name) {
-  return (document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))||'').split('=').slice(1).join('=');
-}
+// ── Cookies ───────────────────────────────────────────────────────
+function getCookie(name){return(document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))||'').split('=').slice(1).join('=')}
+function getLang(){return decodeURIComponent(getCookie('u0_lang'))||'pt'}
 
-function parseCookies() {
-  const obj = {};
-  document.cookie.split(';').forEach(c => {
-    const [k,...v] = c.trim().split('=');
-    obj[k] = decodeURIComponent(v.join('='));
+function logout(){
+  ['u0_token','u0_lang','u0_country'].forEach(k=>{
+    document.cookie=`${k}=;Path=/;Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   });
-  return obj;
+  window.location.href='/';
 }
 
-// ── Clock ────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  document.getElementById('top-clock').textContent =
-    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-}
-setInterval(updateClock, 1000);
-updateClock();
+// ── Clock ─────────────────────────────────────────────────────────
+function updateClock(){const now=new Date(),pad=n=>String(n).padStart(2,'0');document.getElementById('top-clock').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`}
+setInterval(updateClock,1000);updateClock();
 
-// ── Logout ───────────────────────────────────────────────────────
-function logout() {
-  ['u0_token','u0_lang','u0_country'].forEach(k => {
-    document.cookie = `${k}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-  });
-  window.location.href = '/';
-}
+// ── KA API via hidden iframe ──────────────────────────────────────
+// The user is still logged into KA in this browser.
+// We open a hidden iframe to pt.khanacademy.org and inject a script
+// that runs the GraphQL queries using the browser's existing KA session,
+// then sends the data back via postMessage.
 
-// ── Khan Academy GraphQL proxy ───────────────────────────────────
- async function kaQuery(operationName, query, variables={}) {
-    const res = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ operationName, query, variables })
+let kaFrame = null;
+let kaReady = false;
+let pendingQueries = [];
+let queryCallbacks = {};
+let queryId = 0;
+
+function initKAFrame(){
+  return new Promise(resolve => {
+    const lang = getLang();
+    const host = lang === 'en' ? 'www' : lang;
+    kaFrame = document.createElement('iframe');
+    kaFrame.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;right:0;border:none';
+    kaFrame.src = `https://${host}.khanacademy.org/about?u0=1`;
+    document.body.appendChild(kaFrame);
+
+    window.addEventListener('message', function(e){
+      if(!e.origin.includes('khanacademy.org')) return;
+      const msg = e.data;
+      if(msg && msg.type === 'u0_ready'){
+        kaReady = true;
+        resolve();
+        // flush pending
+        pendingQueries.forEach(q => kaFrame.contentWindow.postMessage(q, '*'));
+        pendingQueries = [];
+      }
+      if(msg && msg.type === 'u0_result'){
+        const cb = queryCallbacks[msg.id];
+        if(cb){ cb(msg.data); delete queryCallbacks[msg.id]; }
+      }
     });
-    if (!res.ok) throw new Error('Proxy error: ' + res.status);
-    return res.json();}
-  // / ── State ────────────────────────────────────────────────────────
-let state = { user: null, courses: [], currentCourse: null, currentUnit: null };
 
-// ── Render sidebar ───────────────────────────────────────────────
-function renderSidebar() {
-  const el = document.getElementById('sidebar-courses');
-  if (!state.courses.length) { el.innerHTML = '<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Nenhum curso encontrado</div>'; return; }
+    // Inject script into iframe once loaded
+    kaFrame.onload = function(){
+      const script = `
+        window.parent.postMessage({type:'u0_ready'},'*');
+        window.addEventListener('message',async function(e){
+          if(!e.data||e.data.type!=='u0_query') return;
+          try{
+            const fkey=(document.cookie.match(/fkey=([^;]+)/)||[])[1]||'1';
+            const lang='${lang}';
+            const host='${host}';
+            const r=await fetch('/api/internal/graphql/'+e.data.op+'?lang='+lang+'&app=khanacademy',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','x-ka-fkey':fkey},
+              credentials:'include',
+              body:JSON.stringify({operationName:e.data.op,query:e.data.query,variables:e.data.vars||{}})
+            });
+            const d=await r.json();
+            window.parent.postMessage({type:'u0_result',id:e.data.id,data:d},'*');
+          }catch(err){
+            window.parent.postMessage({type:'u0_result',id:e.data.id,data:null},'*');
+          }
+        });
+      `;
+      try {
+        kaFrame.contentWindow.eval(script);
+      } catch(e) {
+        // If eval blocked, try document.write
+        try {
+          kaFrame.contentWindow.document.open();
+          kaFrame.contentWindow.document.write(`<script>${script}<\/script>`);
+          kaFrame.contentWindow.document.close();
+        } catch(e2) {}
+      }
+    };
+  });
+}
 
-  el.innerHTML = state.courses.map((course, ci) => {
-    const units = course.unitChildren || [];
-    const totalMastery = units.length ? Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length) : 0;
-    const icon = course.title ? course.title[0].toUpperCase() : '?';
-    const isActive = state.currentCourse === ci;
-    return `
-      <div class="sidebar-course">
-        <div class="sidebar-course-header ${isActive?'active open':''}" onclick="toggleCourse(${ci},this)">
-          <div class="sidebar-course-icon">${icon}</div>
-          <div class="sidebar-course-name">${course.title||'Curso'}</div>
-          <span class="sidebar-course-chevron">›</span>
-        </div>
-        <div class="sidebar-units ${isActive?'open':''}" id="course-units-${ci}">
-          ${units.map((unit,ui) => {
-            const pct = Math.round(unit.currentMastery?.percentage||0);
-            const isDone = pct >= 100;
-            return `<div class="sidebar-unit ${state.currentUnit===ui&&isActive?'active':''}" onclick="selectUnit(${ci},${ui})">
-              <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${unit.title||'Unidade'}</span>
-              <span class="sidebar-unit-pct ${isDone?'done':''}">${isDone?'✓':pct+'%'}</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
+function kaQuery(op, query, vars={}){
+  return new Promise((resolve) => {
+    const id = ++queryId;
+    queryCallbacks[id] = resolve;
+    const msg = {type:'u0_query', id, op, query, vars};
+    if(kaReady && kaFrame){
+      kaFrame.contentWindow.postMessage(msg, '*');
+    } else {
+      pendingQueries.push(msg);
+    }
+  });
+}
+
+// ── State ─────────────────────────────────────────────────────────
+let state={user:null,courses:[],currentCourse:null,currentUnit:null};
+
+// ── Sidebar ───────────────────────────────────────────────────────
+function renderSidebar(){
+  const el=document.getElementById('sidebar-courses');
+  if(!state.courses.length){el.innerHTML='<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Nenhum curso encontrado</div>';return}
+  el.innerHTML=state.courses.map((course,ci)=>{
+    const units=course.unitChildren||[];
+    const icon=(course.title||'?')[0].toUpperCase();
+    const isActive=state.currentCourse===ci;
+    return `<div class="sidebar-course">
+      <div class="sidebar-course-header ${isActive?'active open':''}" onclick="toggleCourse(${ci},this)">
+        <div class="sidebar-course-icon">${icon}</div>
+        <div class="sidebar-course-name">${course.title||'Curso'}</div>
+        <span class="sidebar-course-chevron">›</span>
+      </div>
+      <div class="sidebar-units ${isActive?'open':''}" id="cu-${ci}">
+        ${units.map((unit,ui)=>{
+          const pct=Math.round(unit.currentMastery?.percentage||0);
+          return `<div class="sidebar-unit ${state.currentUnit===ui&&isActive?'active':''}" onclick="selectUnit(${ci},${ui})">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${unit.title||'Unidade'}</span>
+            <span class="sidebar-unit-pct ${pct>=100?'done':''}">${pct>=100?'✓':pct+'%'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
   }).join('');
 }
 
-function toggleCourse(ci, headerEl) {
-  const unitsEl = document.getElementById(`course-units-${ci}`);
-  const isOpen = unitsEl.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.sidebar-units').forEach(el=>el.classList.remove('open'));
-  document.querySelectorAll('.sidebar-course-header').forEach(el=>el.classList.remove('open','active'));
-  if (!isOpen) {
-    unitsEl.classList.add('open');
-    headerEl.classList.add('open','active');
-    state.currentCourse = ci;
-    state.currentUnit = null;
-    renderMain();
-  } else {
-    state.currentCourse = null;
-    renderMain();
-  }
+function toggleCourse(ci,headerEl){
+  const unitsEl=document.getElementById(`cu-${ci}`);
+  const isOpen=unitsEl.classList.contains('open');
+  document.querySelectorAll('.sidebar-units').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.sidebar-course-header').forEach(e=>e.classList.remove('open','active'));
+  if(!isOpen){unitsEl.classList.add('open');headerEl.classList.add('open','active');state.currentCourse=ci;state.currentUnit=null;renderMain();}
+  else{state.currentCourse=null;renderMain();}
 }
 
-function selectUnit(ci, ui) {
-  state.currentCourse = ci;
-  state.currentUnit = ui;
-  renderSidebar();
-  renderMain();
+function selectUnit(ci,ui){state.currentCourse=ci;state.currentUnit=ui;renderSidebar();renderMain();}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function ring(pct){
+  const done=pct>=100,dash=Math.round((pct/100)*126);
+  return `<svg class="ring" viewBox="0 0 48 48">
+    <circle class="ring-bg" cx="24" cy="24" r="20"/>
+    <circle class="ring-fill ${done?'done':''}" cx="24" cy="24" r="20" stroke-dashoffset="${126-dash}"/>
+    <text class="ring-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="9">${pct}%</text>
+  </svg>`;
 }
 
-// ── Render main ──────────────────────────────────────────────────
-function renderMain() {
-  const main = document.getElementById('main-content');
-  const token = getCookie('u0_token');
-  if (!token) { renderNotLogged(); return; }
-
-  if (state.currentUnit !== null && state.currentCourse !== null) {
-    renderUnit();
-  } else if (state.currentCourse !== null) {
-    renderCourse();
-  } else {
-    renderHome();
-  }
+// ── Renders ───────────────────────────────────────────────────────
+function renderMain(){
+  if(state.currentUnit!==null&&state.currentCourse!==null) renderUnit();
+  else if(state.currentCourse!==null) renderCourse();
+  else renderHome();
 }
 
-function renderNotLogged() {
-  document.getElementById('main-content').innerHTML = `
-    <div class="not-logged">
-      <div class="not-logged-title">// ACESSO NEGADO</div>
-      <div class="not-logged-sub">Sessão não encontrada ou expirada.<br>Faça login novamente para continuar.</div>
-      <a class="not-logged" href="/" style="color:var(--orange);text-decoration:none;border:1px solid rgba(255,102,0,0.3);padding:10px 24px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.2em;">← VOLTAR AO LOGIN</a>
-    </div>`;
-}
-
-function renderHome() {
-  const user = state.user;
-  const courses = state.courses;
-  const totalUnits = courses.reduce((s,c)=>s+(c.unitChildren||[]).length,0);
-  const doneUnits = courses.reduce((s,c)=>s+(c.unitChildren||[]).filter(u=>(u.currentMastery?.percentage||0)>=100).length,0);
-  const avgSync = totalUnits ? Math.round(courses.reduce((s,c)=>s+(c.unitChildren||[]).reduce((ss,u)=>ss+(u.currentMastery?.percentage||0),0),0)/totalUnits) : 0;
-
-  document.getElementById('top-sync').textContent = avgSync + '%';
-  document.getElementById('top-pilot').textContent = user?.nickname || user?.username || '—';
-  document.getElementById('top-user').textContent = user?.email || user?.username || 'Piloto';
-
-  document.getElementById('main-content').innerHTML = `
+function renderHome(){
+  const{user,courses}=state;
+  const totalUnits=courses.reduce((s,c)=>s+(c.unitChildren||[]).length,0);
+  const doneUnits=courses.reduce((s,c)=>s+(c.unitChildren||[]).filter(u=>(u.currentMastery?.percentage||0)>=100).length,0);
+  const avgSync=totalUnits?Math.round(courses.reduce((s,c)=>s+(c.unitChildren||[]).reduce((ss,u)=>ss+(u.currentMastery?.percentage||0),0),0)/totalUnits):0;
+  document.getElementById('top-sync').textContent=avgSync+'%';
+  document.getElementById('top-pilot').textContent=user?.nickname||user?.username||'—';
+  document.getElementById('top-user').textContent=user?.email||user?.username||'Piloto';
+  document.getElementById('main-content').innerHTML=`
     <div class="page-header">
       <div class="page-breadcrumb">NERV // <span>Dashboard</span></div>
-      <div class="page-title">Bem-vindo, ${user?.nickname || 'Piloto'}</div>
+      <div class="page-title">Bem-vindo, ${user?.nickname||'Piloto'}</div>
       <div class="page-subtitle" style="display:flex;align-items:center;gap:10px;margin-top:8px">
         <span class="pilot-tag">⬡ Piloto ativo</span>
         <span style="font-size:10px;color:var(--muted)">${user?.email||''}</span>
       </div>
     </div>
-
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Sync Rate médio</div>
-        <div class="stat-val">${avgSync}<span style="font-size:16px">%</span></div>
-        <div class="stat-sub">Em todos os cursos</div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-label">Cursos ativos</div>
-        <div class="stat-val">${courses.length}</div>
-        <div class="stat-sub">Matrículas encontradas</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Unidades concluídas</div>
-        <div class="stat-val">${doneUnits}<span style="font-size:14px;color:var(--muted)"> / ${totalUnits}</span></div>
-        <div class="stat-sub">100% de domínio</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Sync Rate médio</div><div class="stat-val">${avgSync}<span style="font-size:16px">%</span></div><div class="stat-sub">Em todos os cursos</div></div>
+      <div class="stat-card orange"><div class="stat-label">Cursos ativos</div><div class="stat-val">${courses.length}</div><div class="stat-sub">Matrículas encontradas</div></div>
+      <div class="stat-card"><div class="stat-label">Unidades concluídas</div><div class="stat-val">${doneUnits}<span style="font-size:14px;color:var(--muted)"> / ${totalUnits}</span></div><div class="stat-sub">100% de domínio</div></div>
     </div>
-
     <div class="section-title">Seus Cursos</div>
     <div class="units-grid">
-      ${courses.map((c,ci) => {
-        const units = c.unitChildren||[];
-        const pct = units.length ? Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length) : 0;
-        const done = pct >= 100;
-        const dash = Math.round((pct/100)*126);
-        return `<div class="unit-card ${done?'done':''}" onclick="state.currentCourse=${ci};renderSidebar();renderMain()">
+      ${courses.map((c,ci)=>{
+        const units=c.unitChildren||[];
+        const pct=units.length?Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length):0;
+        return `<div class="unit-card ${pct>=100?'done':''}" onclick="state.currentCourse=${ci};renderSidebar();renderMain()">
           <div class="unit-card-left">
             <div class="unit-card-title">${c.title||'Curso'}</div>
             <div class="unit-card-meta">${units.length} unidades</div>
             <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${pct}%"></div></div>
           </div>
-          <div class="unit-card-right">
-            <svg class="ring" viewBox="0 0 48 48">
-              <circle class="ring-bg" cx="24" cy="24" r="20"/>
-              <circle class="ring-fill ${done?'done':''}" cx="24" cy="24" r="20"
-                stroke-dashoffset="${126-dash}"/>
-              <text class="ring-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="9">${pct}%</text>
-            </svg>
-          </div>
+          <div class="unit-card-right">${ring(pct)}</div>
           <div class="unit-card-arrow">›</div>
         </div>`;
       }).join('')}
-    </div>
-  `;
+    </div>`;
 }
 
-function renderCourse() {
-  const course = state.courses[state.currentCourse];
-  if (!course) return renderHome();
-  const units = course.unitChildren || [];
-  const pct = units.length ? Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length) : 0;
-
-  document.getElementById('main-content').innerHTML = `
+function renderCourse(){
+  const course=state.courses[state.currentCourse];
+  if(!course) return renderHome();
+  const units=course.unitChildren||[];
+  const pct=units.length?Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length):0;
+  document.getElementById('main-content').innerHTML=`
     <div class="page-header">
       <div class="page-breadcrumb">NERV // <span onclick="state.currentCourse=null;renderSidebar();renderMain()" style="cursor:pointer">Dashboard</span> // <span>${course.title}</span></div>
       <div class="page-title">${course.title}</div>
-      <div class="page-subtitle">Progresso geral: ${pct}% — ${units.filter(u=>(u.currentMastery?.percentage||0)>=100).length} de ${units.length} unidades concluídas</div>
+      <div class="page-subtitle">Progresso: ${pct}% — ${units.filter(u=>(u.currentMastery?.percentage||0)>=100).length} de ${units.length} unidades concluídas</div>
     </div>
     <div class="section-title">Unidades</div>
     <div class="units-grid">
-      ${units.map((unit, ui) => {
-        const up = Math.round(unit.currentMastery?.percentage||0);
-        const done = up >= 100;
-        const dash = Math.round((up/100)*126);
-        const desc = unit.description || '';
-        return `<div class="unit-card ${done?'done':''}" onclick="selectUnit(${state.currentCourse},${ui})">
+      ${units.map((unit,ui)=>{
+        const up=Math.round(unit.currentMastery?.percentage||0);
+        return `<div class="unit-card ${up>=100?'done':''}" onclick="selectUnit(${state.currentCourse},${ui})">
           <div class="unit-card-left">
             <div class="unit-card-title">${unit.title||'Unidade'}</div>
-            <div class="unit-card-meta">${desc.substring(0,80)||'Clique para ver detalhes'}</div>
+            <div class="unit-card-meta">${(unit.description||'').substring(0,80)||'Clique para ver detalhes'}</div>
             <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${up}%"></div></div>
           </div>
-          <div class="unit-card-right">
-            <svg class="ring" viewBox="0 0 48 48">
-              <circle class="ring-bg" cx="24" cy="24" r="20"/>
-              <circle class="ring-fill ${done?'done':''}" cx="24" cy="24" r="20" stroke-dashoffset="${126-dash}"/>
-              <text class="ring-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="9">${up}%</text>
-            </svg>
-          </div>
+          <div class="unit-card-right">${ring(up)}</div>
           <div class="unit-card-arrow">›</div>
         </div>`;
       }).join('')}
-    </div>
-  `;
+    </div>`;
 }
 
-function renderUnit() {
-  const course = state.courses[state.currentCourse];
-  const unit = (course?.unitChildren||[])[state.currentUnit];
-  if (!unit) { renderCourse(); return; }
-  const pct = Math.round(unit.currentMastery?.percentage||0);
-  const lessons = unit.children || [];
-
-  document.getElementById('main-content').innerHTML = `
+function renderUnit(){
+  const course=state.courses[state.currentCourse];
+  const unit=(course?.unitChildren||[])[state.currentUnit];
+  if(!unit) return renderCourse();
+  const pct=Math.round(unit.currentMastery?.percentage||0);
+  const lessons=unit.children||[];
+  document.getElementById('main-content').innerHTML=`
     <div class="page-header">
-      <div class="page-breadcrumb">
-        NERV //
+      <div class="page-breadcrumb">NERV //
         <span onclick="state.currentCourse=null;renderSidebar();renderMain()" style="cursor:pointer">Dashboard</span> //
         <span onclick="state.currentUnit=null;renderSidebar();renderMain()" style="cursor:pointer">${course.title}</span> //
         <span>${unit.title}</span>
@@ -522,160 +386,97 @@ function renderUnit() {
       <div class="page-title">${unit.title}</div>
       <div class="page-subtitle">Domínio: ${pct}%</div>
     </div>
-
     <div class="stats-row">
-      <div class="stat-card ${pct>=100?'orange':''}">
-        <div class="stat-label">Domínio</div>
-        <div class="stat-val">${pct}<span style="font-size:16px">%</span></div>
-        <div class="stat-sub">${pct>=100?'✓ Concluído':'Em andamento'}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Conteúdos</div>
-        <div class="stat-val">${lessons.length}</div>
-        <div class="stat-sub">lições encontradas</div>
-      </div>
+      <div class="stat-card ${pct>=100?'orange':''}"><div class="stat-label">Domínio</div><div class="stat-val">${pct}<span style="font-size:16px">%</span></div><div class="stat-sub">${pct>=100?'✓ Concluído':'Em andamento'}</div></div>
+      <div class="stat-card"><div class="stat-label">Conteúdos</div><div class="stat-val">${lessons.length}</div><div class="stat-sub">lições encontradas</div></div>
     </div>
-
-    ${lessons.length ? `
+    ${lessons.length?`
     <div class="section-title">Conteúdos</div>
     <div class="units-grid">
-      ${lessons.map(lesson => {
-        const lp = Math.round(lesson.currentMastery?.percentage||0);
-        const done = lp >= 100;
-        return `<a class="unit-card ${done?'done':''}"
-          href="https://pt.khanacademy.org${lesson.relativeUrl||''}" target="_blank"
-          style="text-decoration:none">
+      ${lessons.map(l=>{
+        const lp=Math.round(l.currentMastery?.percentage||0);
+        return `<a class="unit-card ${lp>=100?'done':''}" href="https://pt.khanacademy.org${l.relativeUrl||''}" target="_blank" style="text-decoration:none">
           <div class="unit-card-left">
-            <div class="unit-card-title">${lesson.title||'Lição'}</div>
-            <div class="unit-card-meta" style="text-transform:uppercase;font-size:9px;letter-spacing:0.1em;color:var(--teal-dim)">${lesson.kind||'conteúdo'}</div>
+            <div class="unit-card-title">${l.title||'Lição'}</div>
+            <div class="unit-card-meta" style="text-transform:uppercase;font-size:9px;letter-spacing:0.1em;color:var(--teal-dim)">${l.kind||'conteúdo'}</div>
             <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${lp}%"></div></div>
           </div>
           <div class="unit-card-arrow" style="font-size:14px">↗</div>
         </a>`;
       }).join('')}
-    </div>` : `<div style="color:var(--muted);font-size:12px;padding:20px 0">Nenhum conteúdo disponível para esta unidade.</div>`}
-  `;
+    </div>`:'<div style="color:var(--muted);font-size:12px;padding:20px 0">Nenhum conteúdo disponível.</div>'}`;
 }
 
-// ── Data fetching ─────────────────────────────────────────────────
-async function fetchUserData() {
-  try {
-    const data = await kaQuery('getFullUserProfile',
-      `query getFullUserProfile {
-        currentUser {
-          id username nickname email
-          points badgeCounts { bronze silver gold platinum diamond }
+// ── Fetch data via iframe ─────────────────────────────────────────
+async function fetchAll(){
+  await initKAFrame();
+
+  const [userData, classroomData, enrolledData] = await Promise.all([
+    kaQuery('getFullUserProfile',
+      'query getFullUserProfile { currentUser { id username nickname email points } }'),
+    kaQuery('getStudentClassrooms',
+      `query getStudentClassrooms { studentClassrooms { edges { node { id title
+        assignmentList { edges { node { id title description
+          currentMastery { percentage }
+          children { id title kind relativeUrl currentMastery { percentage } }
+        }}}
+      }}}}`),
+    kaQuery('getUserProgress',
+      `query getUserProgress { user { enrolledCourses { id title
+        unitChildren { title description currentMastery { percentage }
+          children { id title kind relativeUrl currentMastery { percentage } }
         }
-      }`
-    );
-    return data?.data?.currentUser || null;
-  } catch(e) { return null; }
+      }}}`)
+  ]);
+
+  state.user = userData?.data?.currentUser || null;
+
+  const classrooms = (classroomData?.data?.studentClassrooms?.edges||[]).map(e=>({
+    title: e.node.title,
+    unitChildren: (e.node.assignmentList?.edges||[]).map(a=>({
+      title: a.node.title, description: a.node.description,
+      currentMastery: a.node.currentMastery, children: a.node.children||[]
+    }))
+  })).filter(c=>c.unitChildren.length>0);
+
+  const enrolled = enrolledData?.data?.user?.enrolledCourses || [];
+  state.courses = [...classrooms, ...enrolled.filter(e=>!classrooms.find(c=>c.title===e.title))];
+
+  document.getElementById('top-pilot').textContent = state.user?.nickname||state.user?.username||'—';
+  document.getElementById('top-user').textContent = state.user?.email||state.user?.username||'Piloto';
+
+  renderSidebar();
+  renderMain();
 }
 
-async function fetchClassrooms() {
-  try {
-    const data = await kaQuery('getStudentClassrooms',
-      `query getStudentClassrooms {
-        studentClassrooms {
-          edges { node {
-            id title
-            assignmentList {
-              edges { node {
-                id
-                unitChildren: assignments {
-                  edges { node {
-                    id title description
-                    currentMastery { percentage }
-                    children { id title kind relativeUrl currentMastery { percentage } }
-                  }}
-                }
-              }}
-            }
-          }}
-        }
-      }`
-    );
-    const classrooms = data?.data?.studentClassrooms?.edges || [];
-    return classrooms.map(e => {
-      const cls = e.node;
-      const assignments = cls.assignmentList?.edges?.map(a => a.node) || [];
-      return {
-        title: cls.title,
-        unitChildren: assignments.map(a => ({
-          title: a.title,
-          description: a.description,
-          currentMastery: a.currentMastery,
-          children: a.children || []
-        }))
-      };
-    }).filter(c => c.unitChildren.length > 0);
-  } catch(e) { return []; }
-}
-
-async function fetchEnrolledCourses() {
-  try {
-    const data = await kaQuery('getUserProgress',
-      `query getUserProgress {
-        user {
-          enrolledCourses {
-            id title
-            unitChildren {
-              title description
-              currentMastery { percentage }
-              children { id title kind relativeUrl currentMastery { percentage } }
-            }
-          }
-        }
-      }`
-    );
-    return data?.data?.user?.enrolledCourses || [];
-  } catch(e) { return []; }
-}
-
-  // === Init ===
-  async function init() {
-      const token = getCookie('u0_token');
-      if (!token) { renderNotLogged(); return; }
-
-      const urlParams = new URLSearchParams(location.search);
-      const rawData = urlParams.get('d');
-
-      if (rawData) {
-            try {
-                    const parsed = JSON.parse(atob(decodeURIComponent(rawData)));
-                    state.user = parsed.user || null;
-                    state.courses = parsed.classrooms || [];
-                    document.getElementById('top-pilot').textContent = state.user?.nickname || state.user?.username || '-';
-                    document.getElementById('top-user').textContent = state.user?.email || 'Piloto';
-                    history.replaceState({}, '', '/dashboard');
-                    renderSidebar();
-                    renderMain();
-                    return;
-            } catch(e) {
-                    console.error('Failed to parse pre-fetched data:', e);
-            }
-      }
-
-      document.getElementById('loading-state').innerHTML = `
-          <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
-              <div class="loading-text">CARREGANDO DADOS DO PILOTO...</div>`;
-
-      const [user, classrooms, enrolled] = await Promise.all([
-            fetchUserData(),
-            fetchClassrooms(),
-            fetchEnrolledCourses()
-          ]);
-
-      state.user = user;
-      state.courses = [...classrooms, ...enrolled.filter(e => !classrooms.find(c => c.title === e.title))];
-
-      document.getElementById('top-pilot').textContent = user?.nickname || user?.username || '-';
-      document.getElementById('top-user').textContent = user?.email || user?.username || 'Piloto';
-
-      renderSidebar();
-      renderMain();
+// ── Init ──────────────────────────────────────────────────────────
+async function init(){
+  const token = getCookie('u0_token');
+  if(!token){
+    document.getElementById('main-content').innerHTML=`
+      <div class="not-logged">
+        <div class="not-logged-title">// ACESSO NEGADO</div>
+        <div class="not-logged-sub">Sessão não encontrada.<br>Use o favorito na página da <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a> para entrar.</div>
+        <a href="/" style="color:var(--orange);text-decoration:none;border:1px solid rgba(255,102,0,0.3);padding:10px 24px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.2em;margin-top:8px">← VOLTAR AO LOGIN</a>
+      </div>`;
+    document.getElementById('sidebar-courses').innerHTML='<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Não autenticado</div>';
+    return;
   }
-// init();
+
+  document.getElementById('main-content').innerHTML=`
+    <div class="loading-wrap"><div class="loading-bar-wrap"><div class="loading-bar"></div></div><div class="loading-text">CARREGANDO DADOS DO PILOTO...</div></div>`;
+
+  try { await fetchAll(); }
+  catch(e) {
+    document.getElementById('main-content').innerHTML=`
+      <div class="not-logged">
+        <div class="not-logged-title">// ERRO DE CONEXÃO</div>
+        <div class="not-logged-sub">Não foi possível carregar os dados.<br>Certifique-se de estar logado na <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a> neste navegador.</div>
+      </div>`;
+  }
+}
+
+init();
 </script>
 </body>
 </html>
