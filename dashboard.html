@@ -306,7 +306,7 @@ function logout() {
 }
 
 // ── Khan Academy GraphQL proxy ───────────────────────────────────
-aync function kaQuery(operationName, query, variables={}) {
+aynsc function kaQuery(operationName, query, variables={}) {
     const res = await fetch('/api/proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
