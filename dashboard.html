@@ -306,19 +306,16 @@ function logout() {
 }
 
 // ── Khan Academy GraphQL proxy ───────────────────────────────────
-asyasync function kaQuery(operationName, query, variables={}) {
+aync function kaQuery(operationName, query, variables={}) {
     const res = await fetch('/api/proxy', {
           method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                      body: JSON.stringify({ operationName, query, variables })
-                        });
-                          if (!res.ok) throw new Error('Proxy error: ' + res.status);
-                            return res.json();
-                      }
-    })
-}
-// ── State ────────────────────────────────────────────────────────
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ operationName, query, variables })
+    });
+    if (!res.ok) throw new Error('Proxy error: ' + res.status);
+    return res.json();}
+  // / ── State ────────────────────────────────────────────────────────
 let state = { user: null, courses: [], currentCourse: null, currentUnit: null };
 
 // ── Render sidebar ───────────────────────────────────────────────
