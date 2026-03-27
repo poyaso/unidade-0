@@ -38,7 +38,7 @@
   }
 
   /* ── TOPBAR ── */
-  .topbar {
+  .topbar f
     position:fixed; top:0; left:0; right:0; height:48px; z-index:200;
     background:rgba(8,8,16,0.97);
     border-bottom:1px solid var(--border);
@@ -306,7 +306,7 @@ function logout() {
 }
 
 // ── Khan Academy GraphQL proxy ───────────────────────────────────
-aynsc function kaQuery(operationName, query, variables={}) {
+ async function kaQuery(operationName, query, variables={}) {
     const res = await fetch('/api/proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
