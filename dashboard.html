@@ -87,11 +87,6 @@
   .ring-text{font-family:'Orbitron',sans-serif;font-size:10px;fill:var(--white)}
   .unit-card-arrow{font-size:18px;color:var(--teal-dim);margin-left:4px}
   .unit-card.done .unit-card-arrow{color:var(--orange);opacity:0.6}
-  .loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px}
-  .loading-bar-wrap{width:200px;height:3px;background:rgba(0,180,180,0.1);overflow:hidden}
-  .loading-bar{height:100%;background:linear-gradient(90deg,var(--teal-dim),var(--teal));animation:loadBar 1.4s ease-in-out infinite}
-  @keyframes loadBar{0%{width:0%;margin-left:0}50%{width:60%}100%{width:0%;margin-left:100%}}
-  .loading-text{font-size:10px;color:var(--teal-dim);letter-spacing:0.2em;text-transform:uppercase}
   .not-logged{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;text-align:center}
   .not-logged-title{font-family:'Orbitron',sans-serif;font-size:18px;color:var(--red)}
   .not-logged-sub{font-size:12px;color:var(--muted);line-height:1.9;max-width:420px}
@@ -104,14 +99,8 @@
 <body>
 <div class="bg"></div>
 <div class="scanlines"></div>
-
 <div class="topbar">
-  <div class="topbar-logo">
-    <div>
-      <div class="topbar-logo-text">unidade 0</div>
-      <div class="topbar-logo-sub">第零号機 // NERV</div>
-    </div>
-  </div>
+  <div class="topbar-logo"><div><div class="topbar-logo-text">unidade 0</div><div class="topbar-logo-sub">第零号機 // NERV</div></div></div>
   <div class="topbar-center">
     <div class="topbar-stat"><span class="topbar-stat-label">MAGI</span><span class="topbar-stat-val blink">ONLINE</span></div>
     <div class="topbar-stat"><span class="topbar-stat-label">SYNC</span><span class="topbar-stat-val" id="top-sync">—</span></div>
@@ -123,7 +112,6 @@
     <button class="topbar-logout" onclick="logout()">SAIR</button>
   </div>
 </div>
-
 <div class="sidebar">
   <div class="sidebar-scroll">
     <div class="sidebar-section">
@@ -136,344 +124,156 @@
     <a href="/">← Página inicial</a>
   </div>
 </div>
-
-<div class="main" id="main-content">
-  <div class="loading-wrap"><div class="loading-bar-wrap"><div class="loading-bar"></div></div><div class="loading-text">INICIALIZANDO SISTEMA MAGI...</div></div>
-</div>
+<div class="main" id="main-content"></div>
 
 <script>
-// ── Cookies ───────────────────────────────────────────────────────
-function getCookie(name){return(document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))||'').split('=').slice(1).join('=')}
-function getLang(){return decodeURIComponent(getCookie('u0_lang'))||'pt'}
-
-function logout(){
-  ['u0_token','u0_lang','u0_country'].forEach(k=>{
-    document.cookie=`${k}=;Path=/;Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-  });
-  window.location.href='/';
-}
-
-// ── Clock ─────────────────────────────────────────────────────────
+function getCookie(n){return decodeURIComponent((document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(n+'='))||'=').split('=').slice(1).join('='))}
+function logout(){['u0_token','u0_lang','u0_country','u0_data'].forEach(k=>{document.cookie=`${k}=;Path=/;Expires=Thu, 01 Jan 1970 00:00:00 GMT`});window.location.href='/'}
 function updateClock(){const now=new Date(),pad=n=>String(n).padStart(2,'0');document.getElementById('top-clock').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`}
 setInterval(updateClock,1000);updateClock();
 
-// ── KA API via hidden iframe ──────────────────────────────────────
-// The user is still logged into KA in this browser.
-// We open a hidden iframe to pt.khanacademy.org and inject a script
-// that runs the GraphQL queries using the browser's existing KA session,
-// then sends the data back via postMessage.
-
-let kaFrame = null;
-let kaReady = false;
-let pendingQueries = [];
-let queryCallbacks = {};
-let queryId = 0;
-
-function initKAFrame(){
-  return new Promise(resolve => {
-    const lang = getLang();
-    const host = lang === 'en' ? 'www' : lang;
-    kaFrame = document.createElement('iframe');
-    kaFrame.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;right:0;border:none';
-    kaFrame.src = `https://${host}.khanacademy.org/about?u0=1`;
-    document.body.appendChild(kaFrame);
-
-    window.addEventListener('message', function(e){
-      if(!e.origin.includes('khanacademy.org')) return;
-      const msg = e.data;
-      if(msg && msg.type === 'u0_ready'){
-        kaReady = true;
-        resolve();
-        // flush pending
-        pendingQueries.forEach(q => kaFrame.contentWindow.postMessage(q, '*'));
-        pendingQueries = [];
-      }
-      if(msg && msg.type === 'u0_result'){
-        const cb = queryCallbacks[msg.id];
-        if(cb){ cb(msg.data); delete queryCallbacks[msg.id]; }
-      }
-    });
-
-    // Inject script into iframe once loaded
-    kaFrame.onload = function(){
-      const script = `
-        window.parent.postMessage({type:'u0_ready'},'*');
-        window.addEventListener('message',async function(e){
-          if(!e.data||e.data.type!=='u0_query') return;
-          try{
-            const fkey=(document.cookie.match(/fkey=([^;]+)/)||[])[1]||'1';
-            const lang='${lang}';
-            const host='${host}';
-            const r=await fetch('/api/internal/graphql/'+e.data.op+'?lang='+lang+'&app=khanacademy',{
-              method:'POST',
-              headers:{'Content-Type':'application/json','x-ka-fkey':fkey},
-              credentials:'include',
-              body:JSON.stringify({operationName:e.data.op,query:e.data.query,variables:e.data.vars||{}})
-            });
-            const d=await r.json();
-            window.parent.postMessage({type:'u0_result',id:e.data.id,data:d},'*');
-          }catch(err){
-            window.parent.postMessage({type:'u0_result',id:e.data.id,data:null},'*');
-          }
-        });
-      `;
-      try {
-        kaFrame.contentWindow.eval(script);
-      } catch(e) {
-        // If eval blocked, try document.write
-        try {
-          kaFrame.contentWindow.document.open();
-          kaFrame.contentWindow.document.write(`<script>${script}<\/script>`);
-          kaFrame.contentWindow.document.close();
-        } catch(e2) {}
-      }
-    };
-  });
-}
-
-function kaQuery(op, query, vars={}){
-  return new Promise((resolve) => {
-    const id = ++queryId;
-    queryCallbacks[id] = resolve;
-    const msg = {type:'u0_query', id, op, query, vars};
-    if(kaReady && kaFrame){
-      kaFrame.contentWindow.postMessage(msg, '*');
-    } else {
-      pendingQueries.push(msg);
-    }
-  });
-}
-
-// ── State ─────────────────────────────────────────────────────────
 let state={user:null,courses:[],currentCourse:null,currentUnit:null};
 
-// ── Sidebar ───────────────────────────────────────────────────────
+function ring(pct){
+  const done=pct>=100,dash=Math.round((pct/100)*126);
+  return `<svg class="ring" viewBox="0 0 48 48"><circle class="ring-bg" cx="24" cy="24" r="20"/><circle class="ring-fill ${done?'done':''}" cx="24" cy="24" r="20" stroke-dashoffset="${126-dash}"/><text class="ring-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="9">${pct}%</text></svg>`;
+}
+
 function renderSidebar(){
   const el=document.getElementById('sidebar-courses');
   if(!state.courses.length){el.innerHTML='<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Nenhum curso encontrado</div>';return}
   el.innerHTML=state.courses.map((course,ci)=>{
     const units=course.unitChildren||[];
-    const icon=(course.title||'?')[0].toUpperCase();
     const isActive=state.currentCourse===ci;
     return `<div class="sidebar-course">
       <div class="sidebar-course-header ${isActive?'active open':''}" onclick="toggleCourse(${ci},this)">
-        <div class="sidebar-course-icon">${icon}</div>
+        <div class="sidebar-course-icon">${(course.title||'?')[0].toUpperCase()}</div>
         <div class="sidebar-course-name">${course.title||'Curso'}</div>
         <span class="sidebar-course-chevron">›</span>
       </div>
       <div class="sidebar-units ${isActive?'open':''}" id="cu-${ci}">
-        ${units.map((unit,ui)=>{
-          const pct=Math.round(unit.currentMastery?.percentage||0);
-          return `<div class="sidebar-unit ${state.currentUnit===ui&&isActive?'active':''}" onclick="selectUnit(${ci},${ui})">
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${unit.title||'Unidade'}</span>
-            <span class="sidebar-unit-pct ${pct>=100?'done':''}">${pct>=100?'✓':pct+'%'}</span>
-          </div>`;
-        }).join('')}
+        ${units.map((u,ui)=>{const p=Math.round(u.currentMastery?.percentage||0);return `<div class="sidebar-unit ${state.currentUnit===ui&&isActive?'active':''}" onclick="selectUnit(${ci},${ui})"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${u.title||'Unidade'}</span><span class="sidebar-unit-pct ${p>=100?'done':''}">${p>=100?'✓':p+'%'}</span></div>`}).join('')}
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleCourse(ci,headerEl){
-  const unitsEl=document.getElementById(`cu-${ci}`);
-  const isOpen=unitsEl.classList.contains('open');
+function toggleCourse(ci,h){
+  const u=document.getElementById(`cu-${ci}`),isOpen=u.classList.contains('open');
   document.querySelectorAll('.sidebar-units').forEach(e=>e.classList.remove('open'));
   document.querySelectorAll('.sidebar-course-header').forEach(e=>e.classList.remove('open','active'));
-  if(!isOpen){unitsEl.classList.add('open');headerEl.classList.add('open','active');state.currentCourse=ci;state.currentUnit=null;renderMain();}
+  if(!isOpen){u.classList.add('open');h.classList.add('open','active');state.currentCourse=ci;state.currentUnit=null;renderMain();}
   else{state.currentCourse=null;renderMain();}
 }
-
 function selectUnit(ci,ui){state.currentCourse=ci;state.currentUnit=ui;renderSidebar();renderMain();}
 
-// ── Helpers ───────────────────────────────────────────────────────
-function ring(pct){
-  const done=pct>=100,dash=Math.round((pct/100)*126);
-  return `<svg class="ring" viewBox="0 0 48 48">
-    <circle class="ring-bg" cx="24" cy="24" r="20"/>
-    <circle class="ring-fill ${done?'done':''}" cx="24" cy="24" r="20" stroke-dashoffset="${126-dash}"/>
-    <text class="ring-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="9">${pct}%</text>
-  </svg>`;
-}
-
-// ── Renders ───────────────────────────────────────────────────────
 function renderMain(){
-  if(state.currentUnit!==null&&state.currentCourse!==null) renderUnit();
-  else if(state.currentCourse!==null) renderCourse();
+  if(state.currentUnit!==null&&state.currentCourse!==null)renderUnit();
+  else if(state.currentCourse!==null)renderCourse();
   else renderHome();
 }
 
 function renderHome(){
   const{user,courses}=state;
-  const totalUnits=courses.reduce((s,c)=>s+(c.unitChildren||[]).length,0);
-  const doneUnits=courses.reduce((s,c)=>s+(c.unitChildren||[]).filter(u=>(u.currentMastery?.percentage||0)>=100).length,0);
-  const avgSync=totalUnits?Math.round(courses.reduce((s,c)=>s+(c.unitChildren||[]).reduce((ss,u)=>ss+(u.currentMastery?.percentage||0),0),0)/totalUnits):0;
-  document.getElementById('top-sync').textContent=avgSync+'%';
-  document.getElementById('top-pilot').textContent=user?.nickname||user?.username||'—';
-  document.getElementById('top-user').textContent=user?.email||user?.username||'Piloto';
+  const total=courses.reduce((s,c)=>s+(c.unitChildren||[]).length,0);
+  const done=courses.reduce((s,c)=>s+(c.unitChildren||[]).filter(u=>(u.currentMastery?.percentage||0)>=100).length,0);
+  const avg=total?Math.round(courses.reduce((s,c)=>s+(c.unitChildren||[]).reduce((ss,u)=>ss+(u.currentMastery?.percentage||0),0),0)/total):0;
+  document.getElementById('top-sync').textContent=avg+'%';
+  document.getElementById('top-pilot').textContent=user?.nickname||user?.username||'Piloto';
+  document.getElementById('top-user').textContent=user?.email||user?.username||'—';
   document.getElementById('main-content').innerHTML=`
     <div class="page-header">
       <div class="page-breadcrumb">NERV // <span>Dashboard</span></div>
-      <div class="page-title">Bem-vindo, ${user?.nickname||'Piloto'}</div>
-      <div class="page-subtitle" style="display:flex;align-items:center;gap:10px;margin-top:8px">
-        <span class="pilot-tag">⬡ Piloto ativo</span>
-        <span style="font-size:10px;color:var(--muted)">${user?.email||''}</span>
-      </div>
+      <div class="page-title">Bem-vindo, ${user?.nickname||user?.username||'Piloto'}</div>
+      <div class="page-subtitle" style="display:flex;align-items:center;gap:10px;margin-top:8px"><span class="pilot-tag">⬡ Piloto ativo</span><span style="font-size:10px;color:var(--muted)">${user?.email||''}</span></div>
     </div>
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Sync Rate médio</div><div class="stat-val">${avgSync}<span style="font-size:16px">%</span></div><div class="stat-sub">Em todos os cursos</div></div>
+      <div class="stat-card"><div class="stat-label">Sync Rate médio</div><div class="stat-val">${avg}<span style="font-size:16px">%</span></div><div class="stat-sub">Em todos os cursos</div></div>
       <div class="stat-card orange"><div class="stat-label">Cursos ativos</div><div class="stat-val">${courses.length}</div><div class="stat-sub">Matrículas encontradas</div></div>
-      <div class="stat-card"><div class="stat-label">Unidades concluídas</div><div class="stat-val">${doneUnits}<span style="font-size:14px;color:var(--muted)"> / ${totalUnits}</span></div><div class="stat-sub">100% de domínio</div></div>
+      <div class="stat-card"><div class="stat-label">Unidades concluídas</div><div class="stat-val">${done}<span style="font-size:14px;color:var(--muted)"> / ${total}</span></div><div class="stat-sub">100% de domínio</div></div>
     </div>
     <div class="section-title">Seus Cursos</div>
-    <div class="units-grid">
-      ${courses.map((c,ci)=>{
-        const units=c.unitChildren||[];
-        const pct=units.length?Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length):0;
-        return `<div class="unit-card ${pct>=100?'done':''}" onclick="state.currentCourse=${ci};renderSidebar();renderMain()">
-          <div class="unit-card-left">
-            <div class="unit-card-title">${c.title||'Curso'}</div>
-            <div class="unit-card-meta">${units.length} unidades</div>
-            <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${pct}%"></div></div>
-          </div>
-          <div class="unit-card-right">${ring(pct)}</div>
-          <div class="unit-card-arrow">›</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+    <div class="units-grid">${courses.map((c,ci)=>{
+      const units=c.unitChildren||[];
+      const pct=units.length?Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length):0;
+      return `<div class="unit-card ${pct>=100?'done':''}" onclick="state.currentCourse=${ci};renderSidebar();renderMain()">
+        <div class="unit-card-left"><div class="unit-card-title">${c.title||'Curso'}</div><div class="unit-card-meta">${units.length} unidades</div><div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${pct}%"></div></div></div>
+        <div class="unit-card-right">${ring(pct)}</div><div class="unit-card-arrow">›</div>
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function renderCourse(){
-  const course=state.courses[state.currentCourse];
-  if(!course) return renderHome();
+  const course=state.courses[state.currentCourse];if(!course)return renderHome();
   const units=course.unitChildren||[];
   const pct=units.length?Math.round(units.reduce((s,u)=>s+(u.currentMastery?.percentage||0),0)/units.length):0;
   document.getElementById('main-content').innerHTML=`
     <div class="page-header">
       <div class="page-breadcrumb">NERV // <span onclick="state.currentCourse=null;renderSidebar();renderMain()" style="cursor:pointer">Dashboard</span> // <span>${course.title}</span></div>
       <div class="page-title">${course.title}</div>
-      <div class="page-subtitle">Progresso: ${pct}% — ${units.filter(u=>(u.currentMastery?.percentage||0)>=100).length} de ${units.length} unidades concluídas</div>
+      <div class="page-subtitle">Progresso: ${pct}% — ${units.filter(u=>(u.currentMastery?.percentage||0)>=100).length} de ${units.length} concluídas</div>
     </div>
     <div class="section-title">Unidades</div>
-    <div class="units-grid">
-      ${units.map((unit,ui)=>{
-        const up=Math.round(unit.currentMastery?.percentage||0);
-        return `<div class="unit-card ${up>=100?'done':''}" onclick="selectUnit(${state.currentCourse},${ui})">
-          <div class="unit-card-left">
-            <div class="unit-card-title">${unit.title||'Unidade'}</div>
-            <div class="unit-card-meta">${(unit.description||'').substring(0,80)||'Clique para ver detalhes'}</div>
-            <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${up}%"></div></div>
-          </div>
-          <div class="unit-card-right">${ring(up)}</div>
-          <div class="unit-card-arrow">›</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+    <div class="units-grid">${units.map((unit,ui)=>{
+      const up=Math.round(unit.currentMastery?.percentage||0);
+      return `<div class="unit-card ${up>=100?'done':''}" onclick="selectUnit(${state.currentCourse},${ui})">
+        <div class="unit-card-left"><div class="unit-card-title">${unit.title||'Unidade'}</div><div class="unit-card-meta">${(unit.description||'').substring(0,80)||'Clique para ver detalhes'}</div><div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${up}%"></div></div></div>
+        <div class="unit-card-right">${ring(up)}</div><div class="unit-card-arrow">›</div>
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function renderUnit(){
   const course=state.courses[state.currentCourse];
   const unit=(course?.unitChildren||[])[state.currentUnit];
-  if(!unit) return renderCourse();
+  if(!unit)return renderCourse();
   const pct=Math.round(unit.currentMastery?.percentage||0);
   const lessons=unit.children||[];
   document.getElementById('main-content').innerHTML=`
     <div class="page-header">
-      <div class="page-breadcrumb">NERV //
-        <span onclick="state.currentCourse=null;renderSidebar();renderMain()" style="cursor:pointer">Dashboard</span> //
-        <span onclick="state.currentUnit=null;renderSidebar();renderMain()" style="cursor:pointer">${course.title}</span> //
-        <span>${unit.title}</span>
-      </div>
-      <div class="page-title">${unit.title}</div>
-      <div class="page-subtitle">Domínio: ${pct}%</div>
+      <div class="page-breadcrumb">NERV // <span onclick="state.currentCourse=null;renderSidebar();renderMain()" style="cursor:pointer">Dashboard</span> // <span onclick="state.currentUnit=null;renderSidebar();renderMain()" style="cursor:pointer">${course.title}</span> // <span>${unit.title}</span></div>
+      <div class="page-title">${unit.title}</div><div class="page-subtitle">Domínio: ${pct}%</div>
     </div>
     <div class="stats-row">
       <div class="stat-card ${pct>=100?'orange':''}"><div class="stat-label">Domínio</div><div class="stat-val">${pct}<span style="font-size:16px">%</span></div><div class="stat-sub">${pct>=100?'✓ Concluído':'Em andamento'}</div></div>
       <div class="stat-card"><div class="stat-label">Conteúdos</div><div class="stat-val">${lessons.length}</div><div class="stat-sub">lições encontradas</div></div>
     </div>
-    ${lessons.length?`
-    <div class="section-title">Conteúdos</div>
-    <div class="units-grid">
-      ${lessons.map(l=>{
-        const lp=Math.round(l.currentMastery?.percentage||0);
-        return `<a class="unit-card ${lp>=100?'done':''}" href="https://pt.khanacademy.org${l.relativeUrl||''}" target="_blank" style="text-decoration:none">
-          <div class="unit-card-left">
-            <div class="unit-card-title">${l.title||'Lição'}</div>
-            <div class="unit-card-meta" style="text-transform:uppercase;font-size:9px;letter-spacing:0.1em;color:var(--teal-dim)">${l.kind||'conteúdo'}</div>
-            <div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${lp}%"></div></div>
-          </div>
-          <div class="unit-card-arrow" style="font-size:14px">↗</div>
-        </a>`;
-      }).join('')}
-    </div>`:'<div style="color:var(--muted);font-size:12px;padding:20px 0">Nenhum conteúdo disponível.</div>'}`;
+    ${lessons.length?`<div class="section-title">Conteúdos</div><div class="units-grid">${lessons.map(l=>{
+      const lp=Math.round(l.currentMastery?.percentage||0);
+      return `<a class="unit-card ${lp>=100?'done':''}" href="https://pt.khanacademy.org${l.relativeUrl||''}" target="_blank" style="text-decoration:none">
+        <div class="unit-card-left"><div class="unit-card-title">${l.title||'Lição'}</div><div class="unit-card-meta" style="text-transform:uppercase;font-size:9px;letter-spacing:0.1em;color:var(--teal-dim)">${l.kind||'conteúdo'}</div><div class="unit-card-bar"><div class="unit-card-bar-fill" style="width:${lp}%"></div></div></div>
+        <div class="unit-card-arrow" style="font-size:14px">↗</div>
+      </a>`;
+    }).join('')}</div>`:'<div style="color:var(--muted);font-size:12px;padding:20px 0">Nenhum conteúdo disponível.</div>'}`;
 }
 
-// ── Fetch data via iframe ─────────────────────────────────────────
-async function fetchAll(){
-  await initKAFrame();
+function init(){
+  const raw=getCookie('u0_data');
+  const token=getCookie('u0_token');
 
-  const [userData, classroomData, enrolledData] = await Promise.all([
-    kaQuery('getFullUserProfile',
-      'query getFullUserProfile { currentUser { id username nickname email points } }'),
-    kaQuery('getStudentClassrooms',
-      `query getStudentClassrooms { studentClassrooms { edges { node { id title
-        assignmentList { edges { node { id title description
-          currentMastery { percentage }
-          children { id title kind relativeUrl currentMastery { percentage } }
-        }}}
-      }}}}`),
-    kaQuery('getUserProgress',
-      `query getUserProgress { user { enrolledCourses { id title
-        unitChildren { title description currentMastery { percentage }
-          children { id title kind relativeUrl currentMastery { percentage } }
-        }
-      }}}`)
-  ]);
-
-  state.user = userData?.data?.currentUser || null;
-
-  const classrooms = (classroomData?.data?.studentClassrooms?.edges||[]).map(e=>({
-    title: e.node.title,
-    unitChildren: (e.node.assignmentList?.edges||[]).map(a=>({
-      title: a.node.title, description: a.node.description,
-      currentMastery: a.node.currentMastery, children: a.node.children||[]
-    }))
-  })).filter(c=>c.unitChildren.length>0);
-
-  const enrolled = enrolledData?.data?.user?.enrolledCourses || [];
-  state.courses = [...classrooms, ...enrolled.filter(e=>!classrooms.find(c=>c.title===e.title))];
-
-  document.getElementById('top-pilot').textContent = state.user?.nickname||state.user?.username||'—';
-  document.getElementById('top-user').textContent = state.user?.email||state.user?.username||'Piloto';
-
-  renderSidebar();
-  renderMain();
-}
-
-// ── Init ──────────────────────────────────────────────────────────
-async function init(){
-  const token = getCookie('u0_token');
   if(!token){
-    document.getElementById('main-content').innerHTML=`
-      <div class="not-logged">
-        <div class="not-logged-title">// ACESSO NEGADO</div>
-        <div class="not-logged-sub">Sessão não encontrada.<br>Use o favorito na página da <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a> para entrar.</div>
-        <a href="/" style="color:var(--orange);text-decoration:none;border:1px solid rgba(255,102,0,0.3);padding:10px 24px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.2em;margin-top:8px">← VOLTAR AO LOGIN</a>
-      </div>`;
     document.getElementById('sidebar-courses').innerHTML='<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Não autenticado</div>';
+    document.getElementById('main-content').innerHTML=`<div class="not-logged"><div class="not-logged-title">// ACESSO NEGADO</div><div class="not-logged-sub">Use o favorito na <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a> para entrar.</div><a href="/" style="color:var(--orange);text-decoration:none;border:1px solid rgba(255,102,0,0.3);padding:10px 24px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.2em;margin-top:8px">← VOLTAR AO LOGIN</a></div>`;
     return;
   }
 
-  document.getElementById('main-content').innerHTML=`
-    <div class="loading-wrap"><div class="loading-bar-wrap"><div class="loading-bar"></div></div><div class="loading-text">CARREGANDO DADOS DO PILOTO...</div></div>`;
-
-  try { await fetchAll(); }
-  catch(e) {
-    document.getElementById('main-content').innerHTML=`
-      <div class="not-logged">
-        <div class="not-logged-title">// ERRO DE CONEXÃO</div>
-        <div class="not-logged-sub">Não foi possível carregar os dados.<br>Certifique-se de estar logado na <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a> neste navegador.</div>
-      </div>`;
+  if(raw){
+    try{
+      const d=JSON.parse(raw);
+      state.user=d.user||null;
+      state.courses=d.courses||[];
+      renderSidebar();
+      renderMain();
+      return;
+    }catch(e){}
   }
+
+  // No data cookie — show message to re-login
+  document.getElementById('sidebar-courses').innerHTML='<div style="padding:16px;font-size:11px;color:var(--teal-dim)">Use o favorito novamente</div>';
+  document.getElementById('main-content').innerHTML=`<div class="not-logged">
+    <div class="not-logged-title">// SEM DADOS</div>
+    <div class="not-logged-sub">Vá para a <a href="https://pt.khanacademy.org" target="_blank">Khan Academy</a>, faça login e clique no favorito novamente para carregar seus cursos.</div>
+  </div>`;
 }
 
 init();
